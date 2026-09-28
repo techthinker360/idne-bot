@@ -1,5 +1,5 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
-const qrcode = require('qrcode-terminal');
+import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import qrcode from 'qrcode-terminal';
 
 const WELCOME_MESSAGE = `*WELCOME TO THE IDNE FAMILY!* 💜
 
@@ -23,14 +23,8 @@ We love you! 💜
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info');
-    
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: true,
-    });
-
+    const sock = makeWASocket({ auth: state, printQRInTerminal: true });
     sock.ev.on('creds.update', saveCreds);
-
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect } = update;
         if(connection === 'close') {
@@ -40,14 +34,11 @@ async function startBot() {
             console.log('IDNE Bot is READY and connected!');
         }
     });
-
     sock.ev.on('group-participants.update', async (update) => {
         if(update.action === 'add') {
             await new Promise(r => setTimeout(r, 2000));
             await sock.sendMessage(update.id, { text: WELCOME_MESSAGE });
-            console.log('Welcomed new members in', update.id);
         }
     });
 }
-
 startBot();
