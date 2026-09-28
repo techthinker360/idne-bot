@@ -1,17 +1,16 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const puppeteer = require('puppeteer');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: puppeteer.executablePath(),
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        executablePath: '/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome',
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
     }
 });
 
-const WELCOME_MESSAGE = `*WELCOME TO THE I DID NOT EVOLVE APOLOGETICS!* 💜
+const WELCOME_MESSAGE = `*WELCOME TO I DID NOT EVOLVE APOLOGETICS!* 💜
 We're glad to have you as part of the team!🎯
 
 Please read through the group description and ensure you follow up with all our engagements.😇
