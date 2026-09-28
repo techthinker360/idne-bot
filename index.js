@@ -1,19 +1,24 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const puppeteer = require('puppeteer');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: true,
+        executablePath: puppeteer.executablePath(),
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     }
 });
 
-const WELCOME_MESSAGE = `*WELCOME TO THE IDNE Apologetics!* 💜
+const WELCOME_MESSAGE = `*WELCOME TO THE I DID NOT EVOLVE APOLOGETICS!* 💜
 We're glad to have you as part of the team!🎯
 
 Please read through the group description and ensure you follow up with all our engagements.😇
 
-Thank you for joining us!🎯- Admin, I.D.N.E Apologetics Media Team.`;
+Thank you for joining us!🎯
+
+* Admin, I.D.N.E Apologetics Media Team.`;
 
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
