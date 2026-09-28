@@ -1,52 +1,53 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
-const path = require('path');
-const fs = require('fs');
 
-// Find chrome wherever it is
-let chromePath = '/opt/render/project/src/.cache/chrome/linux-127.0.6533.88/chrome-linux64/chrome';
-if (fs.existsSync('/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome')) {
-    chromePath = '/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome';
+const WELCOME_MESSAGE = `*WELCOME TO THE IDNE FAMILY!* 💜
+
+I'm so happy to have you here!
+
+*WHAT WE DO:*
+We are a community of bold believers learning to hear God and grow in faith. 🙏
+
+*QUICK START:*
+1️⃣  Tell us your name and where you're from
+2️⃣  What are you trusting God for this season?
+3️⃣  Stay active - we have prayers, teachings and prophetic moments daily!
+
+*HOUSE RULES:*
+Be kind, no spam, no DM without permission, respect everyone.
+
+Again, WELCOME HOME! Your journey just started. 🚀
+We love you! 💜
+
+- Admin, I.D.N.E Community`;
+
+async function startBot() {
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: true,
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if(connection === 'close') {
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            if(shouldReconnect) startBot();
+        } else if(connection === 'open') {
+            console.log('IDNE Bot is READY and connected!');
+        }
+    });
+
+    sock.ev.on('group-participants.update', async (update) => {
+        if(update.action === 'add') {
+            await new Promise(r => setTimeout(r, 2000));
+            await sock.sendMessage(update.id, { text: WELCOME_MESSAGE });
+            console.log('Welcomed new members in', update.id);
+        }
+    });
 }
 
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-        headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || chromePath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process'],
-    }
-});
-
-const WELCOME_MESSAGE = `*WELCOME TO I DID NOT EVOLVE APOLOGETICS!* 💜
-We're glad to have you as part of the team!🎯
-
-Please read the group description and make sure you follow up on all our engagements.😇
-
-Thank you for joining us!🎯
-
-* Admin, Relations Department | I.D.N.E Apologetics.`;
-
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
-    console.log('QR RECEIVED - Scan it!');
-});
-
-client.on('ready', () => {
-    console.log('IDNE Bot is READY and connected!');
-});
-
-client.on('group_join', async (notification) => {
-    try {
-        const chat = await notification.getChat();
-        if (chat.isGroup) {
-            setTimeout(async () => {
-                await chat.sendMessage(WELCOME_MESSAGE);
-            }, 2000);
-        }
-    } catch (e) {
-        console.log('Welcome error:', e.message);
-    }
-});
-
-client.initialize();
+startBot();
