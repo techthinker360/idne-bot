@@ -4,13 +4,20 @@ const qrcode = require('qrcode-terminal');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
     }
 });
 
+const WELCOME_MESSAGE = `*WELCOME TO THE IDNE Apologetics!* 💜
+We're glad to have you as part of the team!🎯
+
+Please read through the group description and ensure you follow up with all our engagements.😇
+
+Thank you for joining us!🎯- Admin, I.D.N.E Apologetics Media Team.`;
+
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
-    console.log('SCAN THIS QR WITH YOUR WHATSAPP');
+    console.log('QR RECEIVED - Scan it!');
 });
 
 client.on('ready', () => {
@@ -20,24 +27,15 @@ client.on('ready', () => {
 client.on('group_join', async (notification) => {
     try {
         const chat = await notification.getChat();
-        if (!chat.isGroup) return;
-
-        for (let memberId of notification.recipientIds) {
-            try {
-                const contact = await client.getContactById(memberId);
-                const welcomeText = `Welcome @${contact.id.user} to *I DID NOT EVOLVE APOLOGETICS (I.D.N.E.)* 🎯\n\nWe defend the Christian faith using science, logic, and Scripture.\n\n📌 Please read our Group Rules in the description and follow with all our engagements.\n\nThank you for joining us!`;
-
-                await chat.sendMessage(welcomeText, { mentions: [contact] });
-                console.log('Welcomed:', contact.id.user);
-            } catch (err) {
-                console.log('Error welcoming one user:', err.message);
-            }
+        if (chat.isGroup) {
+            setTimeout(async () => {
+                await chat.sendMessage(WELCOME_MESSAGE);
+                console.log(`Welcomed in group: ${chat.name}`);
+            }, 2000);
         }
     } catch (e) {
-        console.log('group_join error:', e.message);
+        console.log('Welcome error:', e.message);
     }
 });
 
-client.initialize().catch(err => {
-    console.log('Initialize error:', err.message);
-});
+client.initialize();
